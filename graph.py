@@ -133,7 +133,7 @@ class Graph(defaultdict):
         start: the start node of the random walk.
     """
     G = self
-    if start:
+    if start is not None:
       path = [start]
     else:
       # Sampling is uniform w.r.t V, and not w.r.t E
