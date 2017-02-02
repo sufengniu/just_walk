@@ -114,9 +114,9 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
     for outbuf in executor.map(_write_mat_walks_to_disk, args_list):
-      res.append(outbuf)
+      res.extend(outbuf)
   
-  res = np.reshape(np.array(res), [-1,path_length])
+  res = np.array(res)
   savemat(filebase, mdict={"walk": res})
   # args = [num_paths, path_length, alpha, rand, files]
   # _write_mat_walks_to_disk(args)
