@@ -71,7 +71,7 @@ def _write_mat_walks_to_disk(args):
                                                alpha=alpha, rand=rand):
     outbuf.append(np.array(walk))
   outbuf = np.array(outbuf)
-  savemat("test.mat", mdict={"walk": outbuf})
+  savemat(f, mdict={"walk": outbuf})
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
   return f
 
