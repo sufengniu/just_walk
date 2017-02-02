@@ -65,15 +65,27 @@ def _write_walks_to_disk(args):
 def _write_mat_walks_to_disk(args):
   num_paths, path_length, alpha, rand, f = args
   G = __current_graph
-  t_0 = time()
+  t_0 = time()  
   outbuf = []
   for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
                                                alpha=alpha, rand=rand):
     outbuf.append(np.array(walk))
   outbuf = np.array(outbuf)
-  savemat(f, mdict={"walk": outbuf})
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
-  return f
+  return outbuf
+
+# def _write_mat_walks_to_disk(args):
+#   num_paths, path_length, alpha, rand, f = args
+#   G = __current_graph
+#   t_0 = time()
+#   outbuf = []
+#   for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
+#                                                alpha=alpha, rand=rand):
+#     outbuf.append(np.array(walk))
+#   outbuf = np.array(outbuf)
+#   savemat(f, mdict={"walk": outbuf})
+#   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
+#   return f
 
 def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=random.Random(0), num_workers=cpu_count(),
                         always_rebuild=True):
@@ -81,26 +93,33 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
   global __vertex2str
   __current_graph = G
   __vertex2str = {v:str(v) for v in G.nodes()}
-  # files_list = ["{}.{}".format(filebase, str(x)) for x in xrange(num_paths)]
+  files_list = ["{}.{}".format(filebase, str(x)) for x in xrange(num_paths)]
   expected_size = len(G)
   args_list = []
-  files = filebase
+  files = []
+  res = []
 
-  # if num_paths <= num_workers:
-  #   paths_per_worker = [1 for x in range(num_paths)]
-  # else:
-  #   paths_per_worker = [len(filter(lambda z: z!= None, [y for y in x]))
-  #                       for x in graph.grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
+  if num_paths <= num_workers:
+    paths_per_worker = [1 for x in range(num_paths)]
+  else:
+    paths_per_worker = [len(filter(lambda z: z!= None, [y for y in x]))
+                        for x in graph.grouper(int(num_paths / num_workers)+1, range(1, num_paths+1))]
 
-  # with ProcessPoolExecutor(max_workers=num_workers) as executor:
-  #   for size, file_, ppw in zip(executor.map(count_lines, files_list), files_list, paths_per_worker):
-  #     if always_rebuild or size != (ppw*expected_size):
-  #       args_list.append((ppw, path_length, alpha, random.Random(rand.randint(0, 2**31)), file_))
-  #     else:
-  #       files.append(file_)
+  with ProcessPoolExecutor(max_workers=num_workers) as executor:
+    for size, file_, ppw in zip(executor.map(count_lines, files_list), files_list, paths_per_worker):
+      if always_rebuild or size != (ppw*expected_size):
+        args_list.append((ppw, path_length, alpha, random.Random(rand.randint(0, 2**31)), file_))
+      else:
+        files.append(file_)
 
-  args = [num_paths, path_length, alpha, rand, files]
-  _write_mat_walks_to_disk(args)
+  with ProcessPoolExecutor(max_workers=num_workers) as executor:
+    for outbuf in executor.map(_write_mat_walks_to_disk, args_list):
+      res.append(outbuf)
+  
+  res = np.reshape(np.array(res), [-1,path_length])
+  savemat(filebase, mdict={"walk": res})
+  # args = [num_paths, path_length, alpha, rand, files]
+  # _write_mat_walks_to_disk(args)
 
   return files
 

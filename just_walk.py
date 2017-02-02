@@ -62,7 +62,7 @@ def process(args):
   walks_filebase = args.output + ".mat"
   walk_files = serialized_walks.write_walks_to_disk(G, walks_filebase, num_paths=args.number_walks,
                                        path_length=args.walk_length, alpha=0, rand=random.Random(args.seed),
-                                       num_workers=1)
+                                       num_workers=args.workers)
 
   # print("Counting vertex frequency...")
   # if not args.vertex_freq_degree:
