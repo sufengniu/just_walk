@@ -59,7 +59,7 @@ def process(args):
   print("Walking...")
 
   start = time.time()
-  walks_filebase = args.output + ".mat"
+  walks_filebase = args.output + ".txt"
   walk_files = serialized_walks.write_walks_to_disk(G, walks_filebase, num_paths=args.number_walks,
                                        path_length=args.walk_length, alpha=0, rand=random.Random(args.seed),
                                        num_workers=args.workers)

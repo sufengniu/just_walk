@@ -62,17 +62,17 @@ def _write_walks_to_disk(args):
   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
   return f
 
-def _write_mat_walks_to_disk(args):
-  num_paths, path_length, alpha, rand, f = args
-  G = __current_graph
-  t_0 = time()  
-  outbuf = []
-  for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
-                                               alpha=alpha, rand=rand):
-    outbuf.append(np.array(walk))
-  outbuf = np.array(outbuf)
-  logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
-  return outbuf
+# def _write_mat_walks_to_disk(args):
+#   num_paths, path_length, alpha, rand, f = args
+#   G = __current_graph
+#   t_0 = time()
+#   outbuf = []
+#   for walk in graph.build_deepwalk_corpus_iter(G=G, num_paths=num_paths, path_length=path_length,
+#                                                alpha=alpha, rand=rand):
+#     outbuf.append(np.array(walk))
+#   outbuf = np.array(outbuf)
+#   logger.debug("Generated new file {}, it took {} seconds".format(f, time() - t_0))
+#   return outbuf
 
 # def _write_mat_walks_to_disk(args):
 #   num_paths, path_length, alpha, rand, f = args
@@ -97,6 +97,7 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
   expected_size = len(G)
   args_list = []
   files = []
+  # files = filebase
   res = []
 
   if num_paths <= num_workers:
@@ -113,11 +114,13 @@ def write_walks_to_disk(G, filebase, num_paths, path_length, alpha=0, rand=rando
         files.append(file_)
 
   with ProcessPoolExecutor(max_workers=num_workers) as executor:
-    for outbuf in executor.map(_write_mat_walks_to_disk, args_list):
-      res.extend(outbuf)
-  
-  res = np.array(res)
-  savemat(filebase, mdict={"walk": res})
+    for outbuf in executor.map(_write_walks_to_disk, args_list):
+      files.append(file_)
+      # res.extend(outbuf)
+
+  # res = np.array(res)
+  # savemat(filebase, mdict={"walk": res})
+
   # args = [num_paths, path_length, alpha, rand, files]
   # _write_mat_walks_to_disk(args)
 
