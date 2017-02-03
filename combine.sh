@@ -1,5 +1,5 @@
 #!/bin/bash
 
-for f in ${1}.txt.*; do
+for f in ${1}_walk.txt.*; do
 	cat $f >> ${1}.txt 
 done
